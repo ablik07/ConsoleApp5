@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleApp5.Model
+﻿public class BossSkeleton2 : Enemy
 {
-    internal class BossSkeleton2
+    public BossSkeleton2()
     {
+        Name = "Пестов С--";
+        MaxHP = 32;
+        HP = MaxHP;
+        Attack = 18;
+        Defense = 1;
+        IgnoreDefense = true;
     }
+
+    public override bool TryFreezePlayer() => RandomClass.PercentChance(35);
 }

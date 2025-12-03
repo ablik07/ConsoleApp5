@@ -53,7 +53,7 @@ public class Game
 
             if (turnCount % 10 == 0)
             {
-                Console.WriteLine("\nПОЯВИЛСЯ БОСС!");
+                Console.WriteLine("\n⚠️ ПОЯВИЛСЯ БОСС! ⚠️");
                 FightBoss();
             }
 
