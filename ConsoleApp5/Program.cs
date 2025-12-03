@@ -1,25 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class Item
+public abstract class Item
 {
     public string Name { get; set; }
-
     public virtual void Use(Player player) { }
-
-    public override string ToString()
-    {
-        return Name;
-    }
+    public override string ToString() => Name;
 }
 
 public class HealthPotion : Item
 {
-    public HealthPotion()
-    {
-        Name = "Лечебное зелье";
-    }
-
+    public HealthPotion() => Name = "Лечебное зелье";
     public override void Use(Player player)
     {
         player.HP = 100;
@@ -29,46 +20,18 @@ public class HealthPotion : Item
 
 public class Weapon : Item
 {
-    public int Damage { get; set; }
     public int Attack { get; set; }
-
-    public Weapon(string name, int damage, int attack)
-    {
-        Name = name;
-        Damage = damage;
-        Attack = attack;
-    }
-
-    public override void Use(Player player)
-    {
-        player.CurrentWeapon = this;
-    }
-
-    public override string ToString()
-    {
-        return $"{Name} (Урон: {Damage}, Атака: {Attack})";
-    }
+    public Weapon(string name, int attack) { Name = name; Attack = attack; }
+    public override void Use(Player player) => player.CurrentWeapon = this;
+    public override string ToString() => $"{Name} (Атака: {Attack})";
 }
 
 public class Armor : Item
 {
     public int Defense { get; set; }
-
-    public Armor(string name, int defense, int protection)
-    {
-        Name = name;
-        Defense = defense;
-    }
-
-    public override void Use(Player player)
-    {
-        player.CurrentArmor = this;
-    }
-
-    public override string ToString()
-    {
-        return $"{Name} (Защита: {Defense})";
-    }
+    public Armor(string name, int defense) { Name = name; Defense = defense; }
+    public override void Use(Player player) => player.CurrentArmor = this;
+    public override string ToString() => $"{Name} (Защита: {Defense})";
 }
 
 public class Player
@@ -77,97 +40,54 @@ public class Player
     public bool IsFrozen { get; set; }
     public Weapon CurrentWeapon { get; set; }
     public Armor CurrentArmor { get; set; }
-
     public int Attack => CurrentWeapon?.Attack ?? 5;
     public int Defense => CurrentArmor?.Defense ?? 2;
 
     public Player(int hp)
     {
         HP = hp;
-        CurrentWeapon = new Weapon("Кулаки", 5, 5);
-        CurrentArmor = new Armor("Одежда", 2, 2);
+        CurrentWeapon = new Weapon("Кулаки", 5);
+        CurrentArmor = new Armor("Одежда", 2);
     }
 
-    public bool TryDodge()
-    {
-        Random random = new Random();
-        return random.Next(100) < 40;
-    }
+    public bool TryDodge() => new Random().Next(100) < 40;
 
     public int CalculateBlockedDamage(int damage)
     {
-        Random random = new Random();
-        double blockPercent = random.Next(70, 101) / 100.0;
+        double blockPercent = new Random().Next(70, 101) / 100.0;
         return Math.Max(0, damage - (int)(Defense * blockPercent));
     }
 
-    public void TakeDamage(int damage)
-    {
-        HP -= damage;
-    }
-
-    public string GetStatus()
-    {
-        return $"Здоровье: {HP}";
-    }
-
-    public string GetEquipment()
-    {
-        return $"Оружие: {CurrentWeapon?.Name}, Броня: {CurrentArmor?.Name}";
-    }
+    public string GetStatus() => $"Здоровье: {HP}";
+    public string GetEquipment() => $"Оружие: {CurrentWeapon?.Name}, Броня: {CurrentArmor?.Name}";
 }
 
-public class Enemy
+public abstract class Enemy
 {
-    public string Name { get; set; }
-    public int HP { get; set; }
-    public int MaxHP { get; set; }
-    public int Attack { get; set; }
-    public int Defense { get; set; }
-    public bool IgnoreDefense { get; set; }
+    public string Name { get; protected set; }
+    public int HP { get; protected set; }
+    public int MaxHP { get; protected set; }
+    public int Attack { get; protected set; }
+    public int Defense { get; protected set; }
+    public bool IgnoreDefense { get; protected set; }
     public bool IsAlive => HP > 0;
-
     protected Random random = new Random();
 
-    public virtual int CalculateDamage(Player player)
-    {
-        return Attack;
-    }
-
-    public virtual bool TryFreezePlayer()
-    {
-        return false;
-    }
-
-    public void TakeDamage(int damage)
-    {
-        HP -= damage;
-    }
-
-    public string GetStatus()
-    {
-        return $"{Name}: {HP}/{MaxHP} HP";
-    }
+    public virtual int CalculateDamage(Player player) => Attack;
+    public virtual bool TryFreezePlayer() => false;
+    public virtual void TakeDamage(int damage) => HP -= damage;
+    public string GetStatus() => $"{Name}: {HP}/{MaxHP} HP";
 }
 
 public class Goblin : Enemy
 {
     public Goblin()
     {
-        Name = "Гоблин";
-        MaxHP = 30;
-        HP = MaxHP;
-        Attack = 8;
-        Defense = 2;
+        Name = "Гоблин"; MaxHP = 30; HP = MaxHP; Attack = 8; Defense = 2;
     }
-
     public override int CalculateDamage(Player player)
     {
-        if (random.Next(100) < 15)
-        {
-            Console.WriteLine("Критический удар!");
-            return Attack * 2;
-        }
+        if (random.Next(100) < 15) { Console.WriteLine("Критический удар!"); return Attack * 2; }
         return Attack;
     }
 }
@@ -176,12 +96,7 @@ public class Skeleton : Enemy
 {
     public Skeleton()
     {
-        Name = "Скелет";
-        MaxHP = 25;
-        HP = MaxHP;
-        Attack = 10;
-        Defense = 3;
-        IgnoreDefense = true;
+        Name = "Скелет"; MaxHP = 25; HP = MaxHP; Attack = 10; Defense = 3; IgnoreDefense = true;
     }
 }
 
@@ -189,16 +104,21 @@ public class Mage : Enemy
 {
     public Mage()
     {
-        Name = "Маг";
-        MaxHP = 20;
-        HP = MaxHP;
-        Attack = 12;
-        Defense = 1;
+        Name = "Маг"; MaxHP = 20; HP = MaxHP; Attack = 12; Defense = 1;
     }
+    public override bool TryFreezePlayer() => random.Next(100) < 20;
+}
 
-    public override bool TryFreezePlayer()
+public class Slime : Enemy
+{
+    public Slime()
     {
-        return random.Next(100) < 20;
+        Name = "Слизень"; MaxHP = 40; HP = MaxHP; Attack = 6; Defense = 1;
+    }
+    public override void TakeDamage(int damage)
+    {
+        int reducedDamage = Math.Max(1, damage - 2);
+        HP -= reducedDamage;
     }
 }
 
@@ -206,20 +126,11 @@ public class BossGoblin : Enemy
 {
     public BossGoblin()
     {
-        Name = "ВВГ Босс-Гоблин";
-        MaxHP = 60;
-        HP = MaxHP;
-        Attack = 12;
-        Defense = 2;
+        Name = "ВВГ Босс-Гоблин"; MaxHP = 60; HP = MaxHP; Attack = 12; Defense = 2;
     }
-
     public override int CalculateDamage(Player player)
     {
-        if (random.Next(100) < 25)
-        {
-            Console.WriteLine("Критический удар босса!");
-            return Attack * 2;
-        }
+        if (random.Next(100) < 25) { Console.WriteLine("Критический удар босса!"); return Attack * 2; }
         return Attack;
     }
 }
@@ -228,12 +139,7 @@ public class BossSkeleton : Enemy
 {
     public BossSkeleton()
     {
-        Name = "Ковальский Босс-Скелет";
-        MaxHP = 62;
-        HP = MaxHP;
-        Attack = 13;
-        Defense = 4;
-        IgnoreDefense = true;
+        Name = "Ковальский Босс-Скелет"; MaxHP = 62; HP = MaxHP; Attack = 13; Defense = 4; IgnoreDefense = true;
     }
 }
 
@@ -241,89 +147,60 @@ public class BossMage : Enemy
 {
     public BossMage()
     {
-        Name = "Архимаг C++";
-        MaxHP = 36;
-        HP = MaxHP;
-        Attack = 19;
-        Defense = 1;
+        Name = "Архимаг C++"; MaxHP = 36; HP = MaxHP; Attack = 19; Defense = 1;
     }
-
-    public override bool TryFreezePlayer()
-    {
-        return random.Next(100) < 30;
-    }
+    public override bool TryFreezePlayer() => random.Next(100) < 30;
 }
 
 public class BossSkeleton2 : Enemy
 {
     public BossSkeleton2()
     {
-        Name = "Пестов С--";
-        MaxHP = 32;
-        HP = MaxHP;
-        Attack = 18;
-        Defense = 1;
-        IgnoreDefense = true;
+        Name = "Пестов С--"; MaxHP = 32; HP = MaxHP; Attack = 18; Defense = 1; IgnoreDefense = true;
     }
-
-    public override bool TryFreezePlayer()
-    {
-        return random.Next(100) < 35;
-    }
+    public override bool TryFreezePlayer() => random.Next(100) < 35;
 }
 
 public static class EnemyFactory
 {
     private static Random random = new Random();
 
-    public static Enemy CreateRegularEnemy()
+    public static Enemy CreateRegularEnemy() => random.Next(4) switch
     {
-        return random.Next(3) switch
-        {
-            0 => new Goblin(),
-            1 => new Skeleton(),
-            _ => new Mage()
-        };
-    }
+        0 => new Goblin(),
+        1 => new Skeleton(),
+        2 => new Mage(),
+        _ => new Slime()
+    };
 
-    public static Enemy CreateBoss()
+    public static Enemy CreateBoss() => random.Next(4) switch
     {
-        return random.Next(4) switch
-        {
-            0 => new BossGoblin(),
-            1 => new BossSkeleton(),
-            2 => new BossMage(),
-            _ => new BossSkeleton2()
-        };
-    }
+        0 => new BossGoblin(),
+        1 => new BossSkeleton(),
+        2 => new BossMage(),
+        _ => new BossSkeleton2()
+    };
 }
 
 public class Game
 {
-    private Player player;
-    private Random random;
-    private int turnCount;
+    private Player player = new Player(100);
+    private Random random = new Random();
+    private int turnCount = 0;
 
     private List<Weapon> weapons = new List<Weapon>
     {
-        new Weapon("Деревянный меч", 10, 5),
-        new Weapon("Стальной меч", 20, 8),
-        new Weapon("Огненный посох", 30, 12)
+        new Weapon("Деревянный меч", 5),
+        new Weapon("Стальной меч", 8),
+        new Weapon("Огненный посох", 12)
     };
 
     private List<Armor> armors = new List<Armor>
     {
-        new Armor("Кожаная броня", 3, 3),
-        new Armor("Кольчуга", 5, 5),
-        new Armor("Латные доспехи", 8, 8)
+        new Armor("Кожаная броня", 3),
+        new Armor("Кольчуга", 5),
+        new Armor("Латные доспехи", 8)
     };
-
-    public Game()
-    {
-        player = new Player(100);
-        random = new Random();
-        turnCount = 0;
-    }
 
     public void Start()
     {
@@ -415,10 +292,7 @@ public class Game
             EnemyTurn(enemy);
         }
 
-        if (!enemy.IsAlive)
-        {
-            Console.WriteLine($"\nПобеда! Вы победили {enemy.Name}!");
-        }
+        if (!enemy.IsAlive) Console.WriteLine($"\nПобеда! Вы победили {enemy.Name}!");
     }
 
     private void PlayerTurn(Enemy enemy)
@@ -428,20 +302,21 @@ public class Game
         Console.WriteLine("2 - Защищаться");
         Console.Write("Выберите действие: ");
 
-        switch (Console.ReadLine())
+        string choice = Console.ReadLine();
+        if (choice == "1")
         {
-            case "1":
-                int damage = player.Attack;
-                enemy.TakeDamage(damage);
-                Console.WriteLine($"Вы нанесли {damage} урона!");
-                Console.WriteLine($"{enemy.GetStatus()}");
-                break;
-            case "2":
-                Console.WriteLine("Вы готовитесь к защите...");
-                break;
-            default:
-                Console.WriteLine("Неверный выбор, пропускаете ход!");
-                break;
+            int damage = player.Attack;
+            enemy.TakeDamage(damage);
+            Console.WriteLine($"Вы нанесли {damage} урона!");
+            Console.WriteLine($"{enemy.GetStatus()}");
+        }
+        else if (choice == "2")
+        {
+            Console.WriteLine("Вы готовитесь к защите...");
+        }
+        else
+        {
+            Console.WriteLine("Неверный выбор, пропускаете ход!");
         }
     }
 
@@ -466,7 +341,7 @@ public class Game
             Console.WriteLine($"Защита игнорирована! Урон: {finalDamage}");
         }
 
-        player.TakeDamage(finalDamage);
+        player.HP -= finalDamage;
 
         if (enemy.TryFreezePlayer())
         {
